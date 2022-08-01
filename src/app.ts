@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 
 require("dotenv").config();
 import log4js from "log4js";
@@ -42,18 +42,23 @@ chokidar
 
           const outputPath = [outputFolder, fileName].join("/");
 
+          /* Encoding the video and then patching the video with the new format and file. */
           service
             .encodeVideo(
               path,
               outputPath,
               resolution as 1080 | 720 | 480 | 360 | 240 | 144
             )
-            .then(() =>
-              axios.patch(process.env.API_URI + "/video/" + videoId, {
-                format: resolution,
-                file: outputPath,
-              }).then((res) => logger.info(res.data))
-            )
+            .then(() => {
+              const endpoint = process.env.API_URI + "/video/" + videoId;
+
+              axios
+                .patch(endpoint, {
+                  format: resolution,
+                  file: outputPath,
+                })
+                .then((res: AxiosResponse) => logger.info(res.data));
+            })
             .catch((e) => logger.error(e));
         }
       }
