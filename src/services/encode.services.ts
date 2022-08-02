@@ -6,13 +6,13 @@ import axios from "axios";
 if (process.env.FFMPEG_PATH) ffmpeg.setFfmpegPath(process.env.FFMPEG_PATH);
 if (process.env.FFPROBE_PATH) ffmpeg.setFfprobePath(process.env.FFPROBE_PATH);
 
-export function startWatcher(path: string) {
+export function startWatcher(publicPath: string) {
   const logger = log4js.getLogger("encode.service");
   logger.level = "trace";
 
   chokidar
     /* Watching the videosPath directory for ".mp4" new files that are added. */
-    .watch(path + "/**/*.mp4", {
+    .watch(publicPath + "/**/*.mp4", {
       ignoreInitial: true,
       alwaysStat: true,
     })
@@ -31,10 +31,10 @@ export function startWatcher(path: string) {
           const missingResolutions = [1080, 720, 480, 360, 240, 144].filter(
             (resolution) => resolution <= currentResolution
           );
-          const [userId, videoId] = getIds(path, path);
+          const [userId, videoId] = getIds(path, publicPath);
 
           for (const resolution of missingResolutions) {
-            const outputFolder = [path, userId, videoId, resolution].join("/");
+            const outputFolder = [publicPath, userId, videoId, resolution].join("/");
 
             await createVideoFolder(outputFolder);
 
