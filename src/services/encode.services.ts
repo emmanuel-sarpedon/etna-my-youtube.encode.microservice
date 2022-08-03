@@ -3,8 +3,9 @@ import ffmpeg from "fluent-ffmpeg";
 import fs from "fs/promises";
 import chokidar from "chokidar";
 import axios from "axios";
-if (process.env.FFMPEG_PATH) ffmpeg.setFfmpegPath(process.env.FFMPEG_PATH);
-if (process.env.FFPROBE_PATH) ffmpeg.setFfprobePath(process.env.FFPROBE_PATH);
+
+ffmpeg.setFfmpegPath(require("@ffmpeg-installer/ffmpeg").path);
+ffmpeg.setFfprobePath(require("@ffprobe-installer/ffprobe").path);
 
 export function startWatcher(publicPath: string) {
   const logger = log4js.getLogger("encode.service");
@@ -18,9 +19,7 @@ export function startWatcher(publicPath: string) {
     })
     .on("add", (path: string) => {
       ffmpeg.ffprobe(path, async (err, metadata) => {
-        if (err) logger.error(err);
-
-        if (metadata.format.format_name?.includes("mp4")) {
+        if (metadata?.format.format_name?.includes("mp4")) {
           logger.info(
             "New video uploaded :",
             path.split("/").slice(-1).join("")
@@ -34,7 +33,9 @@ export function startWatcher(publicPath: string) {
           const [userId, videoId] = getIds(path, publicPath);
 
           for (const resolution of missingResolutions) {
-            const outputFolder = [publicPath, userId, videoId, resolution].join("/");
+            const outputFolder = [publicPath, userId, videoId, resolution].join(
+              "/"
+            );
 
             await createVideoFolder(outputFolder);
 
@@ -103,7 +104,6 @@ export async function encodeVideo(
 
         // * event listeners
         .on("error", (err) => {
-          logger.error(err);
           reject(err);
         })
         .on("end", () => {
